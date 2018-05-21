@@ -39,7 +39,8 @@
 
     <div class="container mt-3">
         <p>Remote Device :
-            <strong id="status_device">OFFLINE</strong> ( <span id="display_id"></span> )
+            <strong id="status_device">OFFLINE</strong> (
+            <span id="display_id"></span> )
         </p>
 
         <form class="form-inline">
@@ -64,7 +65,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
+                <tr id="dummy_set">
                     <td colspan="2" class="text-center">Table will be populated automatically</td>
                 </tr>
             </tbody>
@@ -118,15 +119,19 @@
         function onMessageArrived(message) {
             console.log("onMessageArrived:" + message.payloadString);
             $("#status_device").html("ONLINE");
-            if (message.destinationName == d_id+"/info") {
+            if (message.destinationName == d_id + "/info") {
                 var info = JSON.parse(message.payloadString);
                 var keys = Object.keys(info);
                 var count = keys.length;
                 var tbody = $("#res-table").find("tbody");
-                tbody.html("");
+                tbody.find("#dummy_set").parent().html("");
                 for (let i = 0; i < count; i++) {
-                    tbody.append("<tr><th scope=\"row\">" + keys[i] + "</th><td>" + info[keys[i]] + "</td></tr>")
-
+                    if (tbody.find("#" + keys[i]).length > 0) {
+                        tbody.find("#"+keys[i]).children("td").html(info[keys[i]]);
+                    } else {
+                        tbody.append("<tr id=" + keys[i] + "><th scope=\"row\">" + keys[i] + "</th><td>" + info[keys[i]] +
+                            "</td></tr>")
+                    }
                 }
             } else if (message.destinationName == d_id + "/cmdout") {
                 $("#cmdout").append(message.payloadString + "<br>");
@@ -155,9 +160,9 @@
         })
 
 
-        setInterval(function(){
-            $("#status_device").html("OFFLINE");
-        },)
+        // setInterval(function () {
+        //     $("#status_device").html("OFFLINE");
+        // }, 10000)
     </script>
 </body>
 
