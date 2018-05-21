@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="shortcut icon" href="imgs/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/open-iconic-bootstrap.css">
+    <title>Remote Monitoring System</title>
+</head>
+
+<body>
+    <div class="pos-f-t">
+        <div class="collapse" id="navbarToggleExternalContent">
+            <div class="bg-dark p-3">
+                <h5 class="text-light">Set your device ID</h5>
+                <form id="new-from" class="form-inline">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="did" placeholder="Device ID" aria-label="command" aria-describedby="basic-addon2">
+                        <div class="input-group-append">
+                            <button class="btn btn-secondary" id="new-set" type="button">SET</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <nav class="navbar navbar-dark bg-dark">
+            <a class="navbar-brand" href="#">
+                <img src="imgs/favicon.ico" width="32" height="32" class="d-inline-block align-top" alt=""> Monitoring System
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent"
+                aria-expanded="false" aria-label="Toggle navigation">
+                <span class="oi oi-cog"></span>
+            </button>
+        </nav>
+    </div>
+
+    <div class="container mt-3">
+        <p>Remote Device :
+            <strong id="status_device">OFFLINE</strong> ( <span id="display_id"></span> )
+        </p>
+
+        <form class="form-inline">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="Command" id="cmd2send" aria-label="command" aria-describedby="basic-addon2">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" id="send-cmd" type="button">SEND</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="card mb-3">
+            <p id="cmdout" style="font-size: .8rem;height:150px; overflow:hidden; overflow-y:scroll;" class="card-body py-1 px-2">Command Output Window
+                <br>
+            </p>
+        </div>
+        <table id="res-table" class="table table-dark">
+            <thead>
+                <tr>
+                    <th scope="col">Field</th>
+                    <th scope="col">Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="2" class="text-center">Table will be populated automatically</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/mqtt-min.js"></script>
+    <script>
+        location1 = {
+            hostname: "broker.hivemq.com",
+            port: "8000"
+        }
+
+        var d_id = ($("#did").val() != "") ? $("#did").val() : "device123";
+        // Create a client instance
+        client = new Paho.MQTT.Client(location1.hostname, Number(location1.port), "clientId");
+
+        // set callback handlers
+        client.onConnectionLost = onConnectionLost;
+        client.onMessageArrived = onMessageArrived;
+
+        // connect the client
+        client.connect({
+            onSuccess: onConnect
+        });
+
+
+        // called when the client connects
+        function onConnect() {
+            // Once a connection has been made, make a subscription and send a message.
+            console.log("onConnect");
+            $("#display_id").html(d_id);
+            client.subscribe(d_id);
+            client.subscribe(d_id + "/info");
+            client.subscribe(d_id + "/cmdout");
+        }
+
+        // called when the client loses its connection
+        function onConnectionLost(responseObject) {
+            if (responseObject.errorCode !== 0) {
+                console.log("onConnectionLost:" + responseObject.errorMessage);
+            }
+        }
+
+        // called when a message arrives
+        function onMessageArrived(message) {
+            console.log("onMessageArrived:" + message.payloadString);
+            $("#status_device").html("ONLINE");
+            if (message.destinationName == d_id+"/info") {
+                var info = JSON.parse(message.payloadString);
+                var keys = Object.keys(info);
+                var count = keys.length;
+                var tbody = $("#res-table").find("tbody");
+                tbody.html("");
+                for (let i = 0; i < count; i++) {
+                    tbody.append("<tr><th scope=\"row\">" + keys[i] + "</th><td>" + info[keys[i]] + "</td></tr>")
+
+                }
+            } else if (message.destinationName == d_id + "/cmdout") {
+                $("#cmdout").append(message.payloadString + "<br>");
+            }
+        }
+        $("#send-cmd").click(function (e) {
+            e.preventDefault
+            var cmd = $("#cmd2send").val()
+            if (cmd != "") {
+                message = new Paho.MQTT.Message(cmd);
+                message.destinationName = d_id + "/cmd";
+                client.send(message);
+            }
+        })
+
+        $("#new-set").click(function () {
+            d_id = $("#did").val();
+            if (d_id != "") {
+                client.disconnect()
+                // connect the client
+                client.connect({
+                    onSuccess: onConnect
+                });
+            }
+
+        })
+
+
+        setInterval(function(){
+            $("#status_device").html("OFFLINE");
+        },)
+    </script>
+</body>
+
+</html>
