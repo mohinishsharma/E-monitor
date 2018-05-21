@@ -113,6 +113,10 @@
             if (responseObject.errorCode !== 0) {
                 console.log("onConnectionLost:" + responseObject.errorMessage);
             }
+            // connect the client
+        client.connect({
+            onSuccess: onConnect
+        });
         }
 
         // called when a message arrives
