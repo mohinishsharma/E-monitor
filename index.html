@@ -146,12 +146,12 @@
                         console.log("onConnectionLost:" + responseObject.errorMessage);
                     }
                     $("#status_device").html("OFFLINE");
-                    //    // connect the client
-                    //    client.connect({
-                    //             onSuccess: onConnect,
-                    //             userName: $("#uid").val(),
-                    //             password: $("#pid").val()
-                    //         });
+                       // connect the client
+                       client.connect({
+                                onSuccess: onConnect,
+                                userName: $("#uid").val(),
+                                password: $("#pid").val()
+                            });
                 }
 
                 // called when a message arrives
