@@ -92,6 +92,7 @@
     <script src="js/mqtt-min.js"></script>
     <script>
         var client;
+        var connected = false;
         $("#send-cmd").click(function (e) {
             e.preventDefault
             var cmd = $("#cmd2send").val()
@@ -105,8 +106,8 @@
         $("#new-set").click(function () {
             d_id = $("#did").val();
             if (d_id != "") {
-                if (client.hasOwnProperty("connect"))
-                    client.disconnect()
+                if (connected)
+                    client.disconnect();
                 location1 = {
                     hostname: $("#hid").val(),
                     port: $("#portid").val()
@@ -132,6 +133,7 @@
                 function onConnect() {
                     // Once a connection has been made, make a subscription and send a message.
                     console.log("onConnect");
+                    connected = true;
                     $("#display_id").html(d_id);
                     client.subscribe(d_id);
                     client.subscribe(d_id + "/info");
