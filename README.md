@@ -12,15 +12,25 @@ NOTE: NO History is maintained of Logged data.
 
 Demo is @ [E-monitor](https://mohinishsharma.github.io/E-monitor)
 
-## Default subscription
+## Steps to Implement
 
 To use this Realtime Monitoring system.
 
 1. You need to set your MQTT Credentials. Click on the gear button on the top right corner.
   + You will need:
     - `Hostname`
-    - `username
+    - `username`
     - `password`
     - `port number` (Secure port is Recomended)
     - `Device id` (Its an arbitrary `name` to uniquely identify IoT device.)
   + After entering data click on `Set & Connect`.
+2. From your IoT device Publish all the data to the topic name `Device_id/info`.
+  + Data should be in Valid JSON format
+    ```json
+    {
+      "Sensor1": 25,
+      "Sendor2": 1,
+      ...
+    }
+    ```
+    and the table will be automatically populated.
